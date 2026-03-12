@@ -291,7 +291,7 @@ function MainApp() {
                  <Edit size={18} /> {isEditMode ? '關閉編輯模式' : '進入架構編輯模式'}
                </button>
                {isEditMode && (
-                 <button onClick={() => { setShowBackend(true); setBackendTab('person'); }} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition font-bold bg-[#C09D9B] hover:bg-pink-400 text-white shadow-md">
+                 <button onClick={() => { setIsFormOpen(true); setBackendTab('person'); }} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition font-bold bg-[#C09D9B] hover:bg-pink-400 text-white shadow-md">
                    <Shield size={18} /> 進入資料庫後臺
                  </button>
                )}

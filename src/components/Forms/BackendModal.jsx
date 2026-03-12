@@ -158,7 +158,7 @@ export default function BackendModal({
                   <div className="grid grid-cols-3 gap-3">
                     <InputField label="真實姓名" val={editingItem.realName || ''} set={v => setEditingItem({...editingItem, realName: v})} />
                     <div><label className="block text-xs font-bold text-gray-600 mb-1">性別</label><select value={editingItem.gender || ''} onChange={e => setEditingItem({...editingItem, gender: e.target.value})} className="w-full border border-gray-300 rounded p-1.5 text-sm outline-none"><option value="">選擇</option><option value="男">男</option><option value="女">女</option></select></div>
-                    <div><label className="block text-xs font-bold text-gray-600 mb-1">生日</label><input type="date" value={formatDateForInput(editingItem.birthday)} onChange={e => setEditingItem({...editingItem, birthday: e.target.value})} className="w-full border border-gray-300 rounded p-1.5 text-sm outline-none" /></div>
+                    <div><label className="block text-xs font-bold text-gray-600 mb-1">生日</label><input type="date" max="9999-12-31" value={formatDateForInput(editingItem.birthday)} onChange={e => setEditingItem({...editingItem, birthday: e.target.value})} className="w-full border border-gray-300 rounded p-1.5 text-sm outline-none" /></div>
                     <InputField label="手機號碼" val={editingItem.phone || ''} set={v => setEditingItem({...editingItem, phone: v})} />
                     <InputField label="Email" type="email" col={2} val={editingItem.email || ''} set={v => setEditingItem({...editingItem, email: v})} />
                     <InputField label="身分證號碼" col={2} val={editingItem.idNumber || ''} set={v => setEditingItem({...editingItem, idNumber: v})} />
@@ -176,10 +176,10 @@ export default function BackendModal({
                         {calculateTenure(editingItem.joinDate, editingItem.militaryStart, editingItem.militaryEnd, editingItem.isOldSystem, editingItem.internshipPeriods)}
                       </div>
                     </div>
-                    <div><label className="block text-xs font-bold text-gray-600 mb-1">入職時間</label><input type="date" value={formatDateForInput(editingItem.joinDate)} onChange={e => setEditingItem({...editingItem, joinDate: e.target.value})} className="w-full border border-gray-300 rounded p-1.5 text-sm outline-none" /></div>
+                    <div><label className="block text-xs font-bold text-gray-600 mb-1">入職時間</label><input type="date" max="9999-12-31" value={formatDateForInput(editingItem.joinDate)} onChange={e => setEditingItem({...editingItem, joinDate: e.target.value})} className="w-full border border-gray-300 rounded p-1.5 text-sm outline-none" /></div>
                     <div className="col-span-2 grid grid-cols-2 gap-2 bg-yellow-50/50 p-2 rounded border border-yellow-100">
-                      <div><label className="block text-[10px] font-bold text-yellow-700 mb-1">兵役留停(起)</label><input type="date" value={formatDateForInput(editingItem.militaryStart)} onChange={e => setEditingItem({...editingItem, militaryStart: e.target.value})} className="w-full border border-gray-300 rounded p-1 text-sm outline-none" /></div>
-                      <div><label className="block text-[10px] font-bold text-yellow-700 mb-1">兵役留停(迄)</label><input type="date" value={formatDateForInput(editingItem.militaryEnd)} onChange={e => setEditingItem({...editingItem, militaryEnd: e.target.value})} className="w-full border border-gray-300 rounded p-1 text-sm outline-none" /></div>
+                      <div><label className="block text-[10px] font-bold text-yellow-700 mb-1">兵役留停(起)</label><input type="date" max="9999-12-31" value={formatDateForInput(editingItem.militaryStart)} onChange={e => setEditingItem({...editingItem, militaryStart: e.target.value})} className="w-full border border-gray-300 rounded p-1 text-sm outline-none" /></div>
+                      <div><label className="block text-[10px] font-bold text-yellow-700 mb-1">兵役留停(迄)</label><input type="date" max="9999-12-31" value={formatDateForInput(editingItem.militaryEnd)} onChange={e => setEditingItem({...editingItem, militaryEnd: e.target.value})} className="w-full border border-gray-300 rounded p-1 text-sm outline-none" /></div>
                     </div>
                     <div className="col-span-3 bg-white p-3 rounded border border-gray-200 mt-1">
                       <label className="flex items-center gap-2 cursor-pointer mb-2 w-max"><input type="checkbox" checked={editingItem.isOldSystem || false} onChange={e => setEditingItem({...editingItem, isOldSystem: e.target.checked})} className="w-4 h-4 text-[#C09D9B] rounded" /><span className="text-sm font-bold text-gray-700">適用舊制年資 (計算實習時數)</span></label>
@@ -187,7 +187,7 @@ export default function BackendModal({
                         <div className="mt-3 flex flex-col gap-2 border-t border-dashed border-gray-200 pt-3">
                           <div className="flex justify-between items-center"><span className="text-xs font-bold text-gray-500">實習起訖紀錄</span><button type="button" onClick={addInternship} className="flex items-center gap-1 bg-gray-200 px-2 py-1 rounded text-xs font-bold"><Plus size={12}/> 新增實習</button></div>
                           {(editingItem.internshipPeriods || []).map((p, idx) => (
-                            <div key={idx} className="flex items-center gap-2"><span className="text-xs font-bold text-gray-400 w-4">{idx+1}.</span><input type="date" value={formatDateForInput(p.start)} onChange={(e) => updateInternship(idx, 'start', e.target.value)} className="flex-1 border border-gray-300 rounded p-1 text-sm outline-none" /><span className="text-gray-400 text-xs">至</span><input type="date" value={formatDateForInput(p.end)} onChange={(e) => updateInternship(idx, 'end', e.target.value)} className="flex-1 border border-gray-300 rounded p-1 text-sm outline-none" /><button type="button" onClick={() => removeInternship(idx)} className="p-1.5 bg-red-100 text-red-600 rounded"><Minus size={14}/></button></div>
+                            <div key={idx} className="flex items-center gap-2"><span className="text-xs font-bold text-gray-400 w-4">{idx+1}.</span><input type="date" max="9999-12-31" value={formatDateForInput(p.start)} onChange={(e) => updateInternship(idx, 'start', e.target.value)} className="flex-1 border border-gray-300 rounded p-1 text-sm outline-none" /><span className="text-gray-400 text-xs">至</span><input type="date" max="9999-12-31" value={formatDateForInput(p.end)} onChange={(e) => updateInternship(idx, 'end', e.target.value)} className="flex-1 border border-gray-300 rounded p-1 text-sm outline-none" /><button type="button" onClick={() => removeInternship(idx)} className="p-1.5 bg-red-100 text-red-600 rounded"><Minus size={14}/></button></div>
                           ))}
                         </div>
                       )}
@@ -207,7 +207,7 @@ export default function BackendModal({
 
                   {editingItem.empStatus === '離職' && (
                     <div className="mt-4 bg-red-50 p-3 rounded border border-red-100 grid grid-cols-3 gap-3">
-                      <div><label className="block text-xs font-bold text-red-600 mb-1">離職日期</label><input type="date" value={formatDateForInput(editingItem.leaveDate)} onChange={e => setEditingItem({...editingItem, leaveDate: e.target.value})} className="w-full border border-gray-300 rounded p-1 text-sm outline-none" /></div>
+                      <div><label className="block text-xs font-bold text-red-600 mb-1">離職日期</label><input type="date" max="9999-12-31" value={formatDateForInput(editingItem.leaveDate)} onChange={e => setEditingItem({...editingItem, leaveDate: e.target.value})} className="w-full border border-gray-300 rounded p-1 text-sm outline-none" /></div>
                       <InputField label="離職類型" val={editingItem.leaveType || ''} set={v => setEditingItem({...editingItem, leaveType: v})} />
                       <InputField label="離職原因" col={3} val={editingItem.leaveReason || ''} set={v => setEditingItem({...editingItem, leaveReason: v})} />
                     </div>

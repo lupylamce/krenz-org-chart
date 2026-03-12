@@ -201,14 +201,14 @@ export default function Dashboard({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-bold text-gray-600 block mb-1">開始日期與時間</label>
-                      <input type="date" required value={appFormData.startDate || ''} onChange={e => setAppFormData({ ...appFormData, startDate: e.target.value })} className="w-full border border-gray-300 rounded-t p-2 text-sm outline-none" />
+                      <input type="date" required max="9999-12-31" value={appFormData.startDate || ''} onChange={e => setAppFormData({ ...appFormData, startDate: e.target.value })} className="w-full border border-gray-300 rounded-t p-2 text-sm outline-none" />
                       <select value={appFormData.startHour || '09'} onChange={e => setAppFormData({ ...appFormData, startHour: e.target.value })} className="w-full border-x border-b border-gray-300 rounded-b p-1 text-xs bg-gray-50 text-gray-600 font-bold outline-none">
                         {Array.from({ length: 24 }).map((_, i) => { const h = String(i).padStart(2, '0'); return <option key={`sh_${h}`} value={h}>{h}:00</option>; })}
                       </select>
                     </div>
                     <div>
                       <label className="text-xs font-bold text-gray-600 block mb-1">結束日期與時間</label>
-                      <input type="date" required value={appFormData.endDate || ''} onChange={e => setAppFormData({ ...appFormData, endDate: e.target.value })} className="w-full border border-gray-300 rounded-t p-2 text-sm outline-none" />
+                      <input type="date" required max="9999-12-31" value={appFormData.endDate || ''} onChange={e => setAppFormData({ ...appFormData, endDate: e.target.value })} className="w-full border border-gray-300 rounded-t p-2 text-sm outline-none" />
                       <select value={appFormData.endHour || '18'} onChange={e => setAppFormData({ ...appFormData, endHour: e.target.value })} className="w-full border-x border-b border-gray-300 rounded-b p-1 text-xs bg-gray-50 text-gray-600 font-bold outline-none">
                         {Array.from({ length: 24 }).map((_, i) => { const h = String(i).padStart(2, '0'); return <option key={`eh_${h}`} value={h}>{h}:00</option>; })}
                       </select>
