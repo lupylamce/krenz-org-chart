@@ -302,20 +302,16 @@ export default function OrgMap({
         <div className="inline-flex flex-col items-center">
           {renderDeptNode(d)}
           {mC.length > 0 && (
-             <div className="grid grid-cols-[1fr_auto_1fr] items-stretch w-full">
-                <div className="flex-1 min-w-0"></div>
-                <div className={`w-[2px] bg-[#C09D9B] relative shrink-0 ${rC.length > 0 ? 'min-h-[48px]' : 'min-h-[24px]'}`}>
-                   <div className="absolute top-1/2 left-0 w-8 border-t-2 border-dashed border-[#C09D9B] -translate-y-1/2"></div>
-                </div>
-                <div className="flex-1 flex justify-start items-center min-w-0">
-                   <div className="ml-8 flex flex-col gap-4 border-l-2 border-dashed border-[#C09D9B] pl-6 py-4 relative my-[-20px] w-max">
-                     <div className="absolute -left-3 top-0 bottom-0 flex flex-col justify-center text-[#C09D9B] font-bold text-[10px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>幕僚單位</div>
-                     {mC.map(x => (
-                       <div key={x.id} className="relative before:absolute before:content-[''] before:-left-6 before:w-6 before:border-t-2 before:border-dashed before:border-[#C09D9B] before:top-1/2 before:-translate-y-1/2">
-                         {renderDeptNode(x)}
-                       </div>
-                     ))}
-                   </div>
+             <div className="grid grid-cols-2 w-full relative">
+                {/* Center vertical line matching tree.css perfectly */}
+                <div className="absolute top-0 bottom-0 left-1/2 w-[2px] bg-[#C09D9B] -translate-x-1/2"></div>
+                
+                <div className="col-start-2 flex flex-col justify-center gap-4 py-6 pl-8 relative">
+                  {mC.map(x => (
+                    <div key={x.id} className="relative w-max before:absolute before:content-[''] before:-left-8 before:w-8 before:border-t-2 before:border-solid before:border-[#C09D9B] before:top-1/2 before:-translate-y-1/2">
+                      {renderDeptNode(x)}
+                    </div>
+                  ))}
                 </div>
              </div>
           )}
