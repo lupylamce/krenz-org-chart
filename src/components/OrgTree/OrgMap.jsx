@@ -299,19 +299,28 @@ export default function OrgMap({
 
     return (
       <li key={d.id}>
-        <div className="flex justify-center items-start gap-8">
-          {renderDeptNode(d)}
-          {mC.length > 0 && (
-            <div className="flex flex-col gap-4 border-l-2 border-dashed border-[#C09D9B] pl-6 py-2 relative before:absolute before:content-[''] before:w-6 before:border-t-2 before:border-dashed before:border-[#C09D9B] before:left-0 before:top-1/2 before:-translate-y-1/2">
-              <div className="absolute -left-3 top-0 bottom-0 flex flex-col justify-center text-[#C09D9B] font-bold text-[10px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>幕僚單位</div>
-              {mC.map(x => (
-                <div key={x.id} className="relative before:absolute before:content-[''] before:-left-6 before:w-6 before:border-t-2 before:border-dashed before:border-[#C09D9B] before:top-1/2">
-                  {renderDeptNode(x)}
-                </div>
-              ))}
+        {mC.length > 0 ? (
+          <div className="grid grid-cols-[1fr_auto_1fr] items-start w-full">
+            <div></div>
+            <div className="flex justify-center z-10">
+              {renderDeptNode(d)}
             </div>
-          )}
-        </div>
+            <div className="flex justify-start">
+              <div className="flex flex-col gap-4 border-l-2 border-dashed border-[#C09D9B] pl-6 py-2 ml-8 relative before:absolute before:content-[''] before:w-8 before:border-t-2 before:border-dashed before:border-[#C09D9B] before:left-[-32px] before:top-[40px]">
+                <div className="absolute -left-3 top-0 bottom-0 flex flex-col justify-center text-[#C09D9B] font-bold text-[10px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>幕僚單位</div>
+                {mC.map(x => (
+                  <div key={x.id} className="relative before:absolute before:content-[''] before:-left-6 before:w-6 before:border-t-2 before:border-dashed before:border-[#C09D9B] before:top-[40px]">
+                    {renderDeptNode(x)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-center items-start">
+            {renderDeptNode(d)}
+          </div>
+        )}
         {rC.length > 0 && (
           <ul>{rC.map(c => renderTree(c.id))}</ul>
         )}
