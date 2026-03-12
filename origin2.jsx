@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { 
   Users, Edit, LogOut, Home, 
   Network, Copy, Shield, X
@@ -11,13 +11,12 @@ import Dashboard from './components/Dashboard/Dashboard';
 import WarRoom from './components/WarRoom/WarRoom';
 import OrgMap from './components/OrgTree/OrgMap';
 import BackendModal from './components/Forms/BackendModal';
-import BackendList from './components/Forms/BackendList';
 
 import { useAuth } from './hooks/useAuth';
 import { useOrgData } from './hooks/useOrgData';
 import { getTodayString, formatDateForInput } from './utils/dateHelpers';
 
-const LEAVE_TYPES = ['年休假', '事假', '病假', '調休', '婚假', '產假/陪產假', '喪假'];
+const LEAVE_TYPES = ['撟港???, '鈭?', '??', '隤蹂?', '憍?', '?Ｗ?/?芰??, '?芸?'];
 
 function MainApp() {
   const { user, isAuthChecking, loginError, handleLogin, handleGoogleLogin, handleLogout } = useAuth();
@@ -73,8 +72,8 @@ function MainApp() {
 
   const sortedWarRoomEmps = useMemo(() => {
     return [...safeEmployees].sort((a, b) => {
-      const dA = safeDepartments.find(d => d.id === a.deptId)?.name || '未知';
-      const dB = safeDepartments.find(d => d.id === b.deptId)?.name || '未知';
+      const dA = safeDepartments.find(d => d.id === a.deptId)?.name || '?芰';
+      const dB = safeDepartments.find(d => d.id === b.deptId)?.name || '?芰';
       if (dA !== dB) return dA.localeCompare(dB);
       return (a.name || '').localeCompare(b.name || '');
     });
@@ -91,7 +90,7 @@ function MainApp() {
   const copyUID = () => { 
     if (user) { 
       navigator.clipboard.writeText(user.uid).catch(() => {}); 
-      setErrorMsg('✅ UID 已複製'); setTimeout(() => setErrorMsg(''), 3000); 
+      setErrorMsg('??UID 撌脰?鋆?); setTimeout(() => setErrorMsg(''), 3000); 
     } 
   };
 
@@ -124,8 +123,8 @@ function MainApp() {
   };
 
   const handlePunch = async (type, specifiedTime = null) => {
-    if (!currentEmp) return setErrorMsg('未綁定員工卡片。');
-    if (currentEmp.enablePunch === false && !specifiedTime) return setErrorMsg('網頁打卡已關閉。');
+    if (!currentEmp) return setErrorMsg('?芰?摰撌亙??);
+    if (currentEmp.enablePunch === false && !specifiedTime) return setErrorMsg('蝬脤??撌脤???);
     
     const today = specifiedTime ? formatDateForInput(new Date(specifiedTime)) : getTodayString(); 
     const nowTs = specifiedTime || Date.now();
@@ -135,11 +134,11 @@ function MainApp() {
     
     let newRecord = { ...todayRecord };
     if (type === 'in') {
-      if (newRecord.in && !specifiedTime) return setErrorMsg('今日已打過上班卡！'); 
+      if (newRecord.in && !specifiedTime) return setErrorMsg('隞撌脫????剖嚗?); 
       newRecord.in = nowTs;
     } else if (type === 'out') {
-      if (!newRecord.in && !specifiedTime) return setErrorMsg('請先打上班卡！'); 
-      if (newRecord.out && !specifiedTime) return setErrorMsg('今日已打過下班卡！'); 
+      if (!newRecord.in && !specifiedTime) return setErrorMsg('隢????剖嚗?); 
+      if (newRecord.out && !specifiedTime) return setErrorMsg('隞撌脫????剖嚗?); 
       newRecord.out = nowTs;
     } else if (type === 'undo_in') { 
       newRecord.in = null; 
@@ -150,11 +149,11 @@ function MainApp() {
     try {
       await setDoc(empAttRef, JSON.parse(JSON.stringify({ records: { ...currentRecords, [today]: newRecord } })), { merge: true });
       if (!specifiedTime) { 
-        setErrorMsg(type.includes('undo') ? '已撤銷打卡。' : `✅ ${type === 'in' ? '上班' : '下班'}打卡成功！`); 
+        setErrorMsg(type.includes('undo') ? '撌脫?瑟??～? : `??${type === 'in' ? '銝' : '銝'}???嚗); 
         setTimeout(() => setErrorMsg(''), 3000); 
       }
     } catch (e) { 
-      setErrorMsg('打卡失敗。'); 
+      setErrorMsg('?憭望???); 
     }
   };
 
@@ -176,10 +175,10 @@ function MainApp() {
       await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'applications'), payload);
       setAppFormType(null); 
       setAppFormData({});
-      setErrorMsg('✅ 申請已送出。'); 
+      setErrorMsg('???唾?撌脤??); 
       setTimeout(() => setErrorMsg(''), 3000);
     } catch (err) { 
-      setErrorMsg('送出失敗。'); 
+      setErrorMsg('?憭望???); 
     }
   };
 
@@ -195,7 +194,7 @@ function MainApp() {
       } else if (action === 'hr_approve') { 
         ns = 'approved'; up.hrApprovedBy = currentEmp.name; up.hrApprovedAt = Date.now(); 
         if (d.status === 'pending_manager') { 
-          up.managerApprovedBy = currentEmp.name + ' (HR代簽)'; up.managerApprovedAt = Date.now(); 
+          up.managerApprovedBy = currentEmp.name + ' (HR隞?偷)'; up.managerApprovedAt = Date.now(); 
         }
       }
 
@@ -211,10 +210,10 @@ function MainApp() {
         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'attendance', d.applicantId), JSON.parse(JSON.stringify({ records: { ...tr, [targetDateStr]: { ...dr, [isUp ? 'in' : 'out']: specificTimeMs } } })), { merge: true });
       }
 
-      setErrorMsg(`✅ 已${action === 'reject' ? '駁回' : '核准'}`); 
+      setErrorMsg(`??撌?{action === 'reject' ? '擏?' : '?詨?'}`); 
       setTimeout(() => setErrorMsg(''), 3000);
     } catch (err) { 
-      setErrorMsg('操作失敗！'); 
+      setErrorMsg('??憭望?嚗?); 
     }
   };
 
@@ -226,17 +225,17 @@ function MainApp() {
         <div className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#C09D9B] to-[#e0c4c2]"></div>
           <div className="flex justify-center mb-6"><div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center border border-gray-100 shadow-sm"><Users className="text-[#C09D9B]" size={36} /></div></div>
-          <h2 className="text-3xl font-black text-center text-gray-800 mb-2">Krenz 內部系統</h2>
-          <p className="text-center text-gray-500 text-sm font-bold mb-8">組織架構與考勤管理平台</p>
+          <h2 className="text-3xl font-black text-center text-gray-800 mb-2">Krenz ?折蝟餌絞</h2>
+          <p className="text-center text-gray-500 text-sm font-bold mb-8">蝯??嗆??蝞∠?撟喳</p>
           {loginError && <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 font-bold rounded-xl text-sm flex items-center gap-2"><X size={16}/> {loginError}</div>}
           <form onSubmit={(e) => { e.preventDefault(); handleLogin(email, password); }} className="flex flex-col gap-4 mb-6">
-            <div><label className="block text-xs font-bold text-gray-600 mb-1">企業信箱</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#C09D9B] text-sm bg-gray-50 focus:bg-white transition placeholder-gray-400" placeholder="yourname@krenzartwork.com" /></div>
-            <div><label className="block text-xs font-bold text-gray-600 mb-1">密碼</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#C09D9B] text-sm bg-gray-50 focus:bg-white transition" placeholder="••••••••" /></div>
-            <button type="submit" className="w-full py-3 bg-gray-800 hover:bg-black text-white rounded-xl font-black transition shadow-md mt-2">信箱帳號登入</button>
+            <div><label className="block text-xs font-bold text-gray-600 mb-1">隡平靽∠拳</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#C09D9B] text-sm bg-gray-50 focus:bg-white transition placeholder-gray-400" placeholder="yourname@krenzartwork.com" /></div>
+            <div><label className="block text-xs font-bold text-gray-600 mb-1">撖Ⅳ</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#C09D9B] text-sm bg-gray-50 focus:bg-white transition" placeholder="?ＴＴＴＴＴＴＴ? /></div>
+            <button type="submit" className="w-full py-3 bg-gray-800 hover:bg-black text-white rounded-xl font-black transition shadow-md mt-2">靽∠拳撣唾??餃</button>
           </form>
-          <div className="relative flex items-center justify-center my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div><span className="relative bg-white px-4 text-xs font-bold text-gray-400">或使用快速登入</span></div>
-          <button onClick={handleGoogleLogin} type="button" className="w-full py-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl font-black transition flex items-center justify-center gap-3"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Google 帳號登入</button>
-          <button onClick={() => setIsVisitor(true)} className="w-full py-3 mt-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-black transition flex items-center justify-center gap-3"><Users size={18} />訪客免登入瀏覽 (僅限公開架構)</button>
+          <div className="relative flex items-center justify-center my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div><span className="relative bg-white px-4 text-xs font-bold text-gray-400">?蝙?典翰???/span></div>
+          <button onClick={handleGoogleLogin} type="button" className="w-full py-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl font-black transition flex items-center justify-center gap-3"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Google 撣唾??餃</button>
+          <button onClick={() => setIsVisitor(true)} className="w-full py-3 mt-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-black transition flex items-center justify-center gap-3"><Users size={18} />閮芸恥??亦汗 (???祇??嗆?)</button>
         </div>
       </div>
     );
@@ -266,22 +265,22 @@ function MainApp() {
                 <span className="text-[#C09D9B] text-xs font-bold truncate">{currentEmp.title}</span>
               </div>
             </div>
-            {isHRAdmin && <div className="w-max bg-red-500/20 text-red-300 text-[10px] px-2 py-1 rounded font-black border border-red-500/30">🔐 具備 HR 管理權限</div>}
+            {isHRAdmin && <div className="w-max bg-red-500/20 text-red-300 text-[10px] px-2 py-1 rounded font-black border border-red-500/30">?? ?瑕? HR 蝞∠?甈?</div>}
           </div>
         )}
 
         <div className="flex-1 py-6 flex flex-col gap-2 overflow-y-auto px-3">
           {user && (
             <button onClick={() => setCurrentView('dashboard')} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition font-bold group ${currentView==='dashboard'?'bg-[#C09D9B] text-white shadow-md':'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
-              <Home size={20} className={currentView==='dashboard'?'':'group-hover:text-[#C09D9B]'} />{isSidebarOpen && <span className="truncate">個人首頁 Dashboard</span>}
+              <Home size={20} className={currentView==='dashboard'?'':'group-hover:text-[#C09D9B]'} />{isSidebarOpen && <span className="truncate">?犖擐? Dashboard</span>}
             </button>
           )}
           <button onClick={() => setCurrentView('orgChart')} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition font-bold group ${currentView==='orgChart'?'bg-[#C09D9B] text-white shadow-md':'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
-            <Network size={20} className={currentView==='orgChart'?'':'group-hover:text-[#C09D9B]'} />{isSidebarOpen && <span className="truncate">組織架構圖 Org Chart</span>}
+            <Network size={20} className={currentView==='orgChart'?'':'group-hover:text-[#C09D9B]'} />{isSidebarOpen && <span className="truncate">蝯??嗆???Org Chart</span>}
           </button>
           {user && isHRAdmin && (
             <button onClick={() => setCurrentView('warRoom')} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition font-bold group ${currentView==='warRoom'?'bg-[#C09D9B] text-white shadow-md':'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
-              <Users size={20} className={currentView==='warRoom'?'':'group-hover:text-[#C09D9B]'} />{isSidebarOpen && <span className="truncate">考勤與簽核 War Room</span>}
+              <Users size={20} className={currentView==='warRoom'?'':'group-hover:text-[#C09D9B]'} />{isSidebarOpen && <span className="truncate">??偷??War Room</span>}
             </button>
           )}
 
@@ -289,12 +288,11 @@ function MainApp() {
              <div className="mt-8 pt-6 border-t border-gray-800 flex flex-col gap-3">
                <div className="px-3 text-xs font-black tracking-widest text-gray-500 mb-1 uppercase">Admin Tools</div>
                <button onClick={toggleEditMode} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition font-bold ${isEditMode ? 'bg-red-500 hover:bg-red-600 text-white shadow-md' : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'}`}>
-                 <Edit size={18} /> {isEditMode ? '關閉編輯模式' : '進入架構編輯模式'}
+                 <Edit size={18} /> {isEditMode ? '??蝺刻摩璅∪?' : '?脣?嗆?蝺刻摩璅∪?'}
                </button>
                {isEditMode && (
                  <button onClick={() => { setShowBackend(true); setBackendTab('person'); }} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition font-bold bg-[#C09D9B] hover:bg-pink-400 text-white shadow-md">
-                   <Shield size={18} /> 進入資料庫後臺
-                 </button>
+                   <Shield size={18} /> ?脣鞈?摨怠???                 </button>
                )}
              </div>
           )}
@@ -308,12 +306,11 @@ function MainApp() {
           )}
           {user ? (
             <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 p-3 text-gray-400 hover:text-white hover:bg-red-500/20 rounded-xl transition font-bold border border-transparent hover:border-red-500/30">
-              <LogOut size={18} /> {isSidebarOpen && "登出系統"}
+              <LogOut size={18} /> {isSidebarOpen && "?餃蝟餌絞"}
             </button>
           ) : (
             <button onClick={() => window.location.reload()} className="w-full flex items-center justify-center gap-2 p-3 text-[#C09D9B] hover:text-white hover:bg-[#C09D9B] rounded-xl transition font-bold border border-[#C09D9B]">
-              返回登入頁
-            </button>
+              餈??餃??            </button>
           )}
         </div>
       </div>
@@ -370,18 +367,6 @@ function MainApp() {
           />
         )}
 
-        {showBackend && (
-          <BackendList
-            safeDepartments={safeDepartments}
-            safeEmployees={safeEmployees}
-            setEditingItem={setEditingItem}
-            setIsFormOpen={setIsFormOpen}
-            backendTab={backendTab}
-            setBackendTab={setBackendTab}
-            setShowBackend={setShowBackend}
-          />
-        )}
-
         <BackendModal
           formOpen={isFormOpen}
           closeBackendForm={closeBackendForm}
@@ -403,8 +388,7 @@ function MainApp() {
         
         {isSyncing && (
           <div className="fixed top-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg border border-gray-200 text-xs font-bold text-gray-600 flex items-center gap-2 z-[999]">
-            <div className="w-4 h-4 rounded-full border-2 border-[#C09D9B] border-t-transparent animate-spin"></div>資料同步中
-          </div>
+            <div className="w-4 h-4 rounded-full border-2 border-[#C09D9B] border-t-transparent animate-spin"></div>鞈??郊銝?          </div>
         )}
       </div>
     </div>
