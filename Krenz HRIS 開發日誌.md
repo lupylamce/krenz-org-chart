@@ -126,10 +126,47 @@ src/
 
 ---
 
+## Session 4：考勤進化版 (2026-03-13)
+
+### 批次 A：快速修復
+
+| # | Bug / 需求 | 檔案 | 修法 |
+|---|-----------|------|------|
+| A1 | 簽核後詳情面板不關閉 | `WarRoom.jsx` | 每個審核按鈕 `onClick` 追加 `setSelectedAppDetail(null)` |
+| A2 | 補打卡可申請未來時間 | `App.jsx` | `handleSubmitApplication` 增加 `punchMs > Date.now()` 校驗 |
+| A3 | 時間輸入不夠智能 | `Dashboard.jsx` | 假單改 30 分鐘粒度 `<select>`；補卡保留 `<input type="time">` + 預填表定上下班時間 |
+
+### 批次 B：日曆顯示增強
+
+| # | Bug / 需求 | 檔案 | 修法 |
+|---|-----------|------|------|
+| B1 | 補卡核准後日曆仍缺勤 | `AttendanceCalendar.jsx` | 修正 `attendanceLogs[employee.id]` 取值路徑 |
+| B2 | 日曆格缺乏打卡時間與狀態 | `AttendanceCalendar.jsx` | 每格永遠顯示 `punchIn→punchOut`，多重 Tag（遲到 N 分/早退 N 分/正常/上班中） |
+| B3 | 部分工時假不驗證出勤 | `AttendanceCalendar.jsx` | 改用疊加判定（假+出勤共存），依覆蓋工時比例判斷全天假/部分假，部分假無打卡標缺勤 |
+
+### 批次 C：假別庫存扣抵
+
+| # | 需求 | 檔案 | 修法 |
+|---|------|------|------|
+| C1 | 假別政策資料結構 | `App.jsx` | 新增 `LEAVE_POLICY` 常量（7 假別 × `unit/minUnit/note`），全部預設 `enabled: false` |
+| C2 | 後台假別管理 UI | `BackendModal.jsx` | 新增「🗓️ 假別配額」分頁，每假別可啟停 + 設定配額 + 顯示已用/剩餘 |
+| C3 | 請假扣抵校驗 | `App.jsx` | `handleApproveApplication` 核准後依時數自動扣抵 `leaveQuota.used` |
+
+### 批次 D：加班補休串聯
+
+| # | 需求 | 檔案 | 修法 |
+|---|------|------|------|
+| D1 | 加班申請表單 | `Dashboard.jsx` | 申請中心新增加班按鈕 + 加班日期/起止時間表單 + 歷史列表支援 |
+| D2 | 加班核准 → 驗證 → 產生調休 | `App.jsx` | 驗證申請時段 ≤ 打卡範圍，通過後以 30 分鐘為最小單位計算補休，寫入 `leaveQuota.調休.entries[]`（含到期日 +6 個月） |
+| D3 | 補休扣抵與到期管理 | `App.jsx` | 到期前 30 天提醒 HR，到期後標記「已到期待處理」，HR 可延後 6 個月或確認作廢 |
+
+---
+
 ## 待辦事項
 
 - [ ] Unit Testing 環境建構
 - [ ] 跨日打卡 / 忘記下班打卡防呆
 - [ ] 請假與補卡時段重疊衝突校驗
-- [ ] 假別庫存 (特休 / 補休) 扣抵機制
+- [x] ~~假別庫存 (特休 / 補休) 扣抵機制~~ (Session 4 完成)
+- [ ] 調休到期通知與 HR 延後/作廢 UI（已設計，待前端介面）
 - [ ] README.md 完善
