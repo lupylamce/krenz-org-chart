@@ -34,7 +34,8 @@ export default function BackendModal({
   setPersonFormTab,
   safeDepartments,
   safeEmployees,
-  handleSaveItem
+  handleSaveItem,
+  leavePolicy = {}
 }) {
   if (!formOpen || !editingItem) return null;
 
@@ -92,6 +93,7 @@ export default function BackendModal({
               <div className="flex gap-2 border-b border-gray-200 mb-2 shrink-0 overflow-x-auto pb-1">
                 <button type="button" onClick={() => setPersonFormTab('public')} className={`pb-2 px-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${personFormTab === 'public' ? 'border-[#C09D9B] text-[#C09D9B]' : 'border-transparent text-gray-400 hover:text-gray-700'}`}>📇 公開名片與系統權限</button>
                 <button type="button" onClick={() => setPersonFormTab('private')} className={`pb-2 px-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${personFormTab === 'private' ? 'border-[#C09D9B] text-[#C09D9B]' : 'border-transparent text-gray-400 hover:text-gray-700'}`}>🔒 HR機密檔案</button>
+                <button type="button" onClick={() => setPersonFormTab('leave')} className={`pb-2 px-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${personFormTab === 'leave' ? 'border-[#C09D9B] text-[#C09D9B]' : 'border-transparent text-gray-400 hover:text-gray-700'}`}>🗓️ 假別配額</button>
                 <button type="button" onClick={() => setPersonFormTab('skills')} className={`pb-2 px-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${personFormTab === 'skills' ? 'border-[#C09D9B] text-[#C09D9B]' : 'border-transparent text-gray-400 hover:text-gray-700'}`}>⚡ 專業技能</button>
               </div>
             )}
@@ -246,6 +248,78 @@ export default function BackendModal({
               </div>
             )}
             
+            {backendTab === 'person' && personFormTab === 'leave' && (
+              <div className="flex flex-col gap-4 animate-fade-in">
+                <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                  <h4 className="font-black text-blue-800 text-sm mb-1 flex items-center gap-2">🗓️ 假別配額管理</h4>
+                  <p className="text-xs text-blue-600 mb-4">為此員工設定各假別的年度配額。灰色建議值僅供參考，請依實際需求填入。</p>
+                  <div className="flex flex-col gap-3">
+                    {Object.entries(leavePolicy).map(([typeName, policy]) => {
+                      const quota = (editingItem.leaveQuota || {})[typeName] || {};
+                      const isEnabled = quota.enabled !== false && quota.total !== undefined && quota.total !== null;
+                      return (
+                        <div key={typeName} className={`p-3 rounded-xl border transition ${isEnabled ? 'bg-white border-blue-200 shadow-sm' : 'bg-gray-50 border-gray-200'}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input 
+                                type="checkbox" 
+                                checked={isEnabled}
+                                onChange={e => {
+                                  const newQuota = { ...(editingItem.leaveQuota || {}) };
+                                  if (e.target.checked) {
+                                    newQuota[typeName] = { ...(newQuota[typeName] || {}), enabled: true, total: newQuota[typeName]?.total || 0, used: newQuota[typeName]?.used || 0 };
+                                  } else {
+                                    newQuota[typeName] = { ...(newQuota[typeName] || {}), enabled: false };
+                                  }
+                                  setEditingItem({ ...editingItem, leaveQuota: newQuota });
+                                }}
+                                className="w-4 h-4 text-blue-500 rounded"
+                              />
+                              <span className={`font-bold text-sm ${isEnabled ? 'text-gray-800' : 'text-gray-400'}`}>{typeName}</span>
+                              {policy.unpaid && <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold">無薪</span>}
+                              {policy.fromOvertime && <span className="text-[10px] bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded font-bold">加班產生</span>}
+                            </label>
+                            <span className="text-[10px] text-gray-400 italic">{policy.note}</span>
+                          </div>
+                          {isEnabled && (
+                            <div className="grid grid-cols-3 gap-3 mt-2">
+                              <div>
+                                <label className="text-[10px] font-bold text-gray-500 block mb-0.5">年度配額 ({policy.unit === 'hours' ? '小時' : '天'})</label>
+                                <input 
+                                  type="number" 
+                                  step={policy.minUnit || 0.5}
+                                  min="0"
+                                  value={quota.total ?? ''} 
+                                  onChange={e => {
+                                    const newQuota = { ...(editingItem.leaveQuota || {}) };
+                                    newQuota[typeName] = { ...newQuota[typeName], total: parseFloat(e.target.value) || 0 };
+                                    setEditingItem({ ...editingItem, leaveQuota: newQuota });
+                                  }}
+                                  className="w-full border border-gray-300 rounded p-1.5 text-sm outline-none font-bold text-center"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-bold text-gray-500 block mb-0.5">已使用</label>
+                                <div className="w-full border border-gray-200 bg-gray-100 rounded p-1.5 text-sm text-center font-bold text-gray-600">
+                                  {quota.used || 0}
+                                </div>
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-bold text-gray-500 block mb-0.5">剩餘</label>
+                                <div className={`w-full border rounded p-1.5 text-sm text-center font-black ${((quota.total || 0) - (quota.used || 0)) <= 0 ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+                                  {((quota.total || 0) - (quota.used || 0)).toFixed(1)}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {backendTab === 'person' && personFormTab === 'skills' && (
               <div className="flex flex-col gap-4 animate-fade-in bg-blue-50 p-4 rounded-xl border border-blue-100 h-full">
                 <div className="grid grid-cols-2 gap-4">

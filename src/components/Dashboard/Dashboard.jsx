@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   XCircle, Settings, Briefcase, CalendarDays, 
   Clock, LogOut, CheckCircle2, AlertCircle, 
-  Check, FileText, FileClock, X, CalendarRange 
+  Check, FileText, FileClock, X, CalendarRange, Zap 
 } from 'lucide-react';
 import { getTodayString, getTimeString, formatDateForInput } from '../../utils/dateHelpers';
 import { calculateAttendanceStats } from '../../utils/attendance';
@@ -188,9 +188,10 @@ export default function Dashboard({
           <div className="flex flex-col gap-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-max">
               <h2 className="text-lg font-bold text-gray-600 mb-4 flex items-center gap-2"><FileText className="text-blue-500" /> 申請中心</h2>
-              <div className="grid grid-cols-2 gap-4 flex-1">
-                <button onClick={() => { setAppFormType('leave'); setAppFormData({ leaveType: '事假', startHour: '09', endHour: '18' }); }} className="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl flex flex-col items-center justify-center gap-2 transition font-bold p-4"><CalendarDays size={32} /> 請假申請</button>
-                <button onClick={() => { setAppFormType('punch'); setAppFormData({ punchType: 'in' }); }} className="bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 rounded-xl flex flex-col items-center justify-center gap-2 transition font-bold p-4"><FileClock size={32} /> 補打卡單</button>
+              <div className="grid grid-cols-3 gap-3 flex-1">
+                <button onClick={() => { setAppFormType('leave'); setAppFormData({ leaveType: '事假', startHour: '09:00', endHour: '18:30' }); }} className="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl flex flex-col items-center justify-center gap-2 transition font-bold p-4"><CalendarDays size={28} /> 請假申請</button>
+                <button onClick={() => { setAppFormType('punch'); setAppFormData({ punchType: 'in' }); }} className="bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 rounded-xl flex flex-col items-center justify-center gap-2 transition font-bold p-4"><FileClock size={28} /> 補打卡單</button>
+                <button onClick={() => { setAppFormType('overtime'); setAppFormData({ date: '' }); }} className="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl flex flex-col items-center justify-center gap-2 transition font-bold p-4"><Zap size={28} /> 加班申請</button>
               </div>
             </div>
 
@@ -201,8 +202,8 @@ export default function Dashboard({
                 {myApps.length > 0 ? myApps.map(a => (
                   <div key={a.docId} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-lg text-sm">
                     <div className="flex flex-col">
-                      <span className="font-bold text-gray-800">{a.type === 'leave' ? `[請假] ${a.leaveType}` : `[補打卡] ${a.punchType === 'in' ? '上班' : '下班'}`}</span>
-                      <div className="text-xs text-gray-500 font-mono mt-1">{a.type === 'leave' ? `${a.startDate} ${a.startHour || '00'}:00 ~ ${a.endDate} ${a.endHour || '23'}:00` : `${a.date} ${a.time}`}</div>
+                      <span className="font-bold text-gray-800">{a.type === 'leave' ? `[請假] ${a.leaveType}` : a.type === 'overtime' ? `[加班] ${a.date}` : `[補打卡] ${a.punchType === 'in' ? '上班' : '下班'}`}</span>
+                      <div className="text-xs text-gray-500 font-mono mt-1">{a.type === 'leave' ? `${a.startDate} ${a.startHour || '00:00'} ~ ${a.endDate} ${a.endHour || '23:00'}` : a.type === 'overtime' ? `${a.date} ${a.overtimeStart || ''} ~ ${a.overtimeEnd || ''}` : `${a.date} ${a.time}`}</div>
                     </div>
                     <span className={`px-2 py-1 rounded text-[10px] font-bold shrink-0 ml-2 ${a.status === 'approved' ? 'bg-green-100 text-green-700' : a.status === 'rejected' ? 'bg-red-100 text-red-700' : a.status === 'pending_hr' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>
                       {a.status === 'approved' ? '✅ 已建檔 (HR)' : a.status === 'rejected' ? '❌ 已駁回' : a.status === 'pending_manager' ? '🟡 待主管' : '🟢 已成立(待HR)'}
@@ -220,7 +221,7 @@ export default function Dashboard({
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col">
             <div className="bg-gray-50 p-4 border-b border-gray-200 flex justify-between items-center">
               <h3 className="font-black text-gray-800 flex items-center gap-2">
-                {appFormType === 'leave' ? <CalendarDays className="text-blue-500" /> : <FileClock className="text-orange-500" />} {appFormType === 'leave' ? '新增請假單' : '新增補打卡單'}
+                {appFormType === 'leave' ? <CalendarDays className="text-blue-500" /> : appFormType === 'overtime' ? <Zap className="text-purple-500" /> : <FileClock className="text-orange-500" />} {appFormType === 'leave' ? '新增請假單' : appFormType === 'overtime' ? '新增加班申請' : '新增補打卡單'}
               </h3>
               <button type="button" onClick={() => setAppFormType(null)} className="text-gray-400 hover:text-gray-800"><X size={20}/></button>
             </div>
@@ -248,6 +249,26 @@ export default function Dashboard({
                     <select required value={appFormData.leaveType || ''} onChange={e => setAppFormData({ ...appFormData, leaveType: e.target.value })} className="w-full border border-gray-300 rounded p-2 text-sm bg-white outline-none">
                       <option value="">請選擇假別...</option>{LEAVE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
+                  </div>
+                </>
+              ) : appFormType === 'overtime' ? (
+                <>
+                  <div>
+                    <label className="text-xs font-bold text-gray-600 block mb-1">加班日期</label>
+                    <input type="date" required max="9999-12-31" value={appFormData.date || ''} onChange={e => setAppFormData({ ...appFormData, date: e.target.value })} className="w-full border border-gray-300 rounded p-2 text-sm outline-none" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-gray-600 block mb-1">預計開始時間</label>
+                      <input type="time" step="60" required value={appFormData.overtimeStart || ''} onChange={e => setAppFormData({ ...appFormData, overtimeStart: e.target.value })} className="w-full border border-gray-300 rounded p-2 text-sm outline-none" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-600 block mb-1">預計結束時間</label>
+                      <input type="time" step="60" required value={appFormData.overtimeEnd || ''} onChange={e => setAppFormData({ ...appFormData, overtimeEnd: e.target.value })} className="w-full border border-gray-300 rounded p-2 text-sm outline-none" />
+                    </div>
+                  </div>
+                  <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 text-xs text-purple-700 font-bold">
+                    💡 加班審核通過後，系統將依據實際打卡範圍驗證申請時段，並以每 30 分鐘為最小單位自動產生調休額度（效期 6 個月）。
                   </div>
                 </>
               ) : (

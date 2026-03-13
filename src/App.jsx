@@ -17,7 +17,16 @@ import { useAuth } from './hooks/useAuth';
 import { useOrgData } from './hooks/useOrgData';
 import { getTodayString, formatDateForInput } from './utils/dateHelpers';
 
-const LEAVE_TYPES = ['年休假', '事假', '病假', '調休', '婚假', '產假/陪產假', '喪假'];
+const LEAVE_POLICY = {
+  '年休假': { unit: 'days', minUnit: 0.5, note: '建議：工齡1~10年5~10天' },
+  '事假':   { unit: 'days', unpaid: true, minUnit: 1, note: '建議：全年不超過20天' },
+  '病假':   { unit: 'days', minUnit: 0.5, note: '建議：醫療期3~24個月' },
+  '調休':   { unit: 'hours', fromOvertime: true, minUnit: 0.5, expiryMonths: 6, note: '加班產生，6個月內使用' },
+  '婚假':   { unit: 'days', minUnit: 1, note: '建議：3天（各地可能不同）' },
+  '產假/陪產假': { unit: 'days', minUnit: 1, note: '建議：產假98天/陪產假15天' },
+  '喪假':   { unit: 'days', minUnit: 0.5, note: '建議：1~3天' }
+};
+const LEAVE_TYPES = Object.keys(LEAVE_POLICY);
 
 function MainApp() {
   const { user, isAuthChecking, loginError, handleLogin, handleGoogleLogin, handleLogout } = useAuth();
@@ -213,6 +222,7 @@ function MainApp() {
       up.status = ns;
       await updateDoc(appRef, JSON.parse(JSON.stringify(up)));
       
+      // 補打卡核准 → 寫入考勤紀錄
       if (ns === 'approved' && d.type === 'punch') {
         const targetDateStr = d.date;
         const specificTimeMs = new Date(`${targetDateStr.split('-').join('/')} ${d.time}`).getTime();
@@ -222,8 +232,86 @@ function MainApp() {
         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'attendance', d.applicantId), JSON.parse(JSON.stringify({ records: { ...tr, [targetDateStr]: { ...dr, [isUp ? 'in' : 'out']: specificTimeMs } } })), { merge: true });
       }
 
-      setErrorMsg(`✅ 已${action === 'reject' ? '駁回' : '核准'}`); 
-      setTimeout(() => setErrorMsg(''), 3000);
+      // C3: 假單核准 → 自動扣抵假別庫存
+      if (ns === 'approved' && d.type === 'leave' && d.leaveType) {
+        const empPrivate = privateData[d.applicantId] || {};
+        const quota = { ...(empPrivate.leaveQuota || {}) };
+        const typeQuota = quota[d.leaveType];
+        if (typeQuota && typeQuota.enabled) {
+          // 計算請假時數/天數
+          const sDate = new Date(`${d.startDate.split('-').join('/')} ${d.startHour || '00'}:00`);
+          const eDate = new Date(`${d.endDate.split('-').join('/')} ${d.endHour || '23'}:00`);
+          const diffHours = Math.max(0, (eDate - sDate) / (1000 * 3600));
+          const policy = LEAVE_POLICY[d.leaveType] || {};
+          const deduction = policy.unit === 'hours' ? diffHours : diffHours / (parseFloat(currentEmp?.workEndTime?.split(':')[0] || 18) - parseFloat(currentEmp?.workStartTime?.split(':')[0] || 9));
+          
+          quota[d.leaveType] = { ...typeQuota, used: (typeQuota.used || 0) + Math.round(deduction * 10) / 10 };
+          const updatedPrivate = { ...privateData, [d.applicantId]: { ...empPrivate, leaveQuota: quota } };
+          updateCloudData(safeDepartments, safeEmployees, updatedPrivate);
+        }
+      }
+
+      // D2: 加班核准 → 驗證申請時段在打卡範圍內 → 產生調休額度
+      if (ns === 'approved' && d.type === 'overtime') {
+        const tr = attendanceLogs[d.applicantId] || {};
+        const dayLog = tr[d.date] || {};
+        
+        // 驗證：該日必須有打卡紀錄
+        if (!dayLog.in || !dayLog.out) {
+          setErrorMsg('⛔ 加班日無完整打卡紀錄（需有上下班卡），無法核准。');
+          setTimeout(() => setErrorMsg(''), 5000);
+          // 回滾 status
+          await updateDoc(appRef, { status: d.status });
+          return;
+        }
+
+        // 驗證：申請時段必須在實際打卡 in~out 範圍內
+        const punchInMs = new Date(dayLog.in).getTime();
+        const punchOutMs = new Date(dayLog.out).getTime();
+        const applyStartMs = new Date(`${d.date.split('-').join('/')} ${d.overtimeStart}`).getTime();
+        const applyEndMs = new Date(`${d.date.split('-').join('/')} ${d.overtimeEnd}`).getTime();
+        
+        if (applyStartMs < punchInMs || applyEndMs > punchOutMs) {
+          setErrorMsg(`⛔ 申請時段 (${d.overtimeStart}~${d.overtimeEnd}) 超出實際打卡範圍，無法核准。`);
+          setTimeout(() => setErrorMsg(''), 5000);
+          await updateDoc(appRef, { status: d.status });
+          return;
+        }
+
+        // 計算補休時數（30 分鐘為最小單位，不足捨去）
+        const diffMs = applyEndMs - applyStartMs;
+        const halfHours = Math.floor(diffMs / (1000 * 60 * 30));
+        const compHours = halfHours * 0.5;
+
+        if (compHours > 0) {
+          const empPrivate = privateData[d.applicantId] || {};
+          const quota = { ...(empPrivate.leaveQuota || {}) };
+          const compQuota = quota['調休'] || { enabled: true, total: 0, used: 0 };
+          
+          // 計算到期日 = 加班日 + 6 個月
+          const otDate = new Date(d.date.split('-').join('/'));
+          otDate.setMonth(otDate.getMonth() + 6);
+          const expiryDate = `${otDate.getFullYear()}-${String(otDate.getMonth()+1).padStart(2,'0')}-${String(otDate.getDate()).padStart(2,'0')}`;
+          
+          // 記錄補休明細
+          const compEntries = [...(compQuota.entries || []), {
+            hours: compHours,
+            fromDate: d.date,
+            expiryDate,
+            status: 'active' // active | expired | used_up | extended
+          }];
+
+          quota['調休'] = { ...compQuota, enabled: true, total: (compQuota.total || 0) + compHours, entries: compEntries };
+          const updatedPrivate = { ...privateData, [d.applicantId]: { ...empPrivate, leaveQuota: quota } };
+          updateCloudData(safeDepartments, safeEmployees, updatedPrivate);
+
+          // 更新 application 記錄補休明細
+          await updateDoc(appRef, { compHours, compExpiryDate: expiryDate });
+        }
+      }
+
+      setErrorMsg(`✅ 已${action === 'reject' ? '駁回' : '核准'}${d.type === 'overtime' && ns === 'approved' ? ` (產生 ${Math.floor((new Date(`${d.date.split('-').join('/')} ${d.overtimeEnd}`).getTime() - new Date(`${d.date.split('-').join('/')} ${d.overtimeStart}`).getTime()) / (1000*60*30)) * 0.5} 小時調休)` : ''}`); 
+      setTimeout(() => setErrorMsg(''), 5000);
     } catch (err) { 
       setErrorMsg('操作失敗！'); 
     }
@@ -404,6 +492,7 @@ function MainApp() {
           safeDepartments={safeDepartments}
           safeEmployees={safeEmployees}
           handleSaveItem={handleSaveItem}
+          leavePolicy={LEAVE_POLICY}
         />
 
         {errorMsg && (
