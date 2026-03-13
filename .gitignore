@@ -21,7 +21,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Dev Logs (Excluded)
+# Dev Logs (本地開發歷程，不上傳)
 系統開發鐵律與除錯紀錄.md
 Krenz HRIS 開發日誌.md
 
@@ -46,3 +46,12 @@ firebase-service-account.json
 *.njsproj
 *.sln
 *.sw?
+
+# Old backup files (dev artifacts, not needed in production)
+old_app.jsx
+old2.jsx
+origin_app.jsx
+origin2.jsx
+origin3.txt
+origin4.txt
+src/App_old.backup.jsx

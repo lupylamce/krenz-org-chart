@@ -161,6 +161,17 @@ function MainApp() {
   const handleSubmitApplication = async (e) => {
     e.preventDefault(); 
     if (!currentEmp) return;
+
+    // A2: 補打卡不可申請未來時間
+    if (appFormType === 'punch') {
+      const punchMs = new Date(`${appFormData.date?.split('-').join('/')} ${appFormData.time || '00:00'}`).getTime();
+      if (punchMs > Date.now()) {
+        setErrorMsg('⛔ 不可申請未來時間的補打卡！'); 
+        setTimeout(() => setErrorMsg(''), 3000);
+        return;
+      }
+    }
+
     try {
       const payload = JSON.parse(JSON.stringify({
         ...appFormData, 
