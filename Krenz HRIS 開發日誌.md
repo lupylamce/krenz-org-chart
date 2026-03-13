@@ -1,0 +1,135 @@
+# Krenz HRIS 開發日誌
+
+> 最後更新：2026-03-13
+
+## 專案資訊
+
+| 項目 | 內容 |
+|------|------|
+| 專案名稱 | Krenz 企業內網 (HRIS) |
+| 技術堆疊 | React 18 + Vite 5, Tailwind CSS, Firebase Auth & Firestore, Lucide React |
+| 部署方式 | GitHub Pages via GitHub Actions |
+| 版控 | Git → `lupylamce/krenz-org-chart` (main branch) |
+
+---
+
+## 系統架構
+
+### 雙層金庫資料庫
+
+| 層級 | Firestore Path | 權限 |
+|------|----------------|------|
+| Public | `/artifacts/{appId}/public/data/orgData/org_v2` | 所有人可讀，Admin 可寫 |
+| Private | `/artifacts/{appId}/private/data/hrData/roster` | 僅 Admin (HR 信箱綁定) 可讀寫 |
+
+### 模組化目錄結構 (S.O.L.I.D.)
+
+```
+src/
+├── components/
+│   ├── OrgTree/        # 組織架構圖 (OrgMap.jsx)
+│   ├── Dashboard/      # 員工儀表板 + 考勤月曆 (Dashboard.jsx, AttendanceCalendar.jsx)
+│   ├── WarRoom/        # HR 戰情室 (WarRoom.jsx)
+│   ├── Forms/          # 後台表單 (BackendList.jsx, BackendModal.jsx)
+│   └── common/         # 共用元件 (InputField.jsx)
+├── hooks/              # useAuth, useOrgData, useAttendance
+├── services/           # firebase.js
+├── utils/              # dateHelpers.js, attendance.js (純函數)
+└── styles/             # tree.css (全域樣式)
+```
+
+---
+
+## 開發迭代紀錄
+
+### Phase 1 ~ 3.5：核心功能建置
+
+- 組織架構圖渲染與互動式拖曳
+- 雙層金庫 (Public/Private) 與 RBAC 權限控管
+- 動態考勤引擎：遲到 / 早退 / 緩衝分鐘計算
+- 假勤雙層簽核流程：員工申請 → 主管核准 → HR 歸檔
+
+---
+
+### Phase 4：系統重構與部署轉移
+
+| 項目 | 狀態 | 說明 |
+|------|------|------|
+| S.O.L.I.D 模組化 | ✅ | 拆解 2000 行 `App.jsx` 為獨立元件、Hook、Service |
+| GitHub Actions 部署 | ✅ | 建立 `.github/workflows/deploy.yml`，自動 build + deploy 至 GitHub Pages |
+| `.gitignore` | ✅ | 排除 `node_modules/`, `dist/`, `.env`, `*.log`, `.tmp` |
+
+---
+
+### 2026-03-12 Session 1：首次除錯
+
+| Bug | 檔案 | 修法 |
+|-----|------|------|
+| 幕僚單位偏移 | `OrgMap.jsx` | 改用 `flex-1` 均分容器空間對齊中央鉛垂線 |
+| 編輯模式無法進後台 | `App.jsx` | 修正 `setIsFormOpen` 狀態對應，確保按鈕切換到花名冊 |
+| 日期年份可超過 4 位 | 全系統 `<input type="date">` | 加上 `max="9999-12-31"` 屬性 |
+
+---
+
+### 2026-03-12 Session 2：深度除錯
+
+#### 1. 組織圖 T 字排版二次修正 (`OrgMap.jsx`)
+
+**問題**：`flex-1` 在右側幕僚寬度不對稱時仍會把父節點推偏。
+
+**解法**：改用 CSS Grid `grid-cols-[1fr_auto_1fr]`，強制左右 `1fr` 等寬，中間 T 字線絕對置中。
+
+#### 2. 後臺入口遺失修復 (`BackendList.jsx`)
+
+**問題**：重構時遺漏了花名冊總表元件，HR 點「進入資料庫後臺」後無畫面。
+
+**解法**：重寫 `BackendList.jsx`，提供搜尋、新增，以及串接 `BackendModal.jsx` 編輯單筆資料的完整流程。
+
+---
+
+### 2026-03-12 Session 3：UI 修復 + 考勤防呆 + 考勤月曆開發
+
+#### 1. T 字排版三次修正 (`OrgMap.jsx`)
+
+**問題**：Grid 的 `1fr_auto_1fr` 在某些情況下仍有 sub-pixel 偏移，且旁邊有多餘的「幕僚單位」直書小字。
+
+**解法**：
+- 改用 `grid-cols-2` + 絕對定位中線 (`absolute left-1/2 -translate-x-1/2 w-[2px]`)，確保像素級精準對齊。
+- 移除「幕僚單位」直書文字標籤。
+
+#### 2. BackendList 無法捲動 (`BackendList.jsx`)
+
+**問題**：外層 `overflow-hidden` 鎖死使長名單無法滾動。
+
+**解法**：調整容器為 `flex-1 overflow-y-auto min-h-0`。
+
+#### 3. Sidebar 導覽未清理疊加層 (`App.jsx`)
+
+**問題**：切換頁面時 BackendList Modal 仍殘留。
+
+**解法**：每個 Sidebar 按鈕的 `onClick` 統一追加 `setShowBackend(false)`。
+
+#### 4. 請假漏打卡防呆 (`Dashboard.jsx`)
+
+**新增**：員工處於請假期間但上午未打卡時，系統顯示紅色脈衝警告，引導填寫補打卡單。
+
+#### 5. 考勤月曆開發 (`AttendanceCalendar.jsx`) 🆕
+
+| 功能 | 說明 |
+|------|------|
+| 月曆網格 | 動態渲染當月日期，前後月灰顯補位 |
+| 狀態色碼 | 🟢 正常 / 🔴 異常缺勤 / 🔵 請假 / 🟡 審核中 |
+| 月度統計 | 出勤天數、請假天數、遲到早退次數、異常缺勤次數 |
+| 員工端入口 | Dashboard「近期考勤」旁新增「完整日曆」按鈕 |
+| HR 端入口 | WarRoom 表格操作欄新增月曆圖示按鈕，點擊開啟全螢幕月曆 |
+| 快捷補卡 | 員工點擊異常日期 → 自動帶入日期並開啟補打卡表單 |
+
+---
+
+## 待辦事項
+
+- [ ] Unit Testing 環境建構
+- [ ] 跨日打卡 / 忘記下班打卡防呆
+- [ ] 請假與補卡時段重疊衝突校驗
+- [ ] 假別庫存 (特休 / 補休) 扣抵機制
+- [ ] README.md 完善
