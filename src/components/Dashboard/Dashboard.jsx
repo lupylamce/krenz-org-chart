@@ -1,31 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   XCircle, Settings, Briefcase, CalendarDays, 
   Clock, LogOut, CheckCircle2, AlertCircle, 
-  Check, FileText, FileClock, X 
+  Check, FileText, FileClock, X, CalendarRange 
 } from 'lucide-react';
 import { getTodayString, getTimeString, formatDateForInput } from '../../utils/dateHelpers';
 import { calculateAttendanceStats } from '../../utils/attendance';
+import AttendanceCalendar from './AttendanceCalendar';
 
 export default function Dashboard({
   user,
   currentEmp,
   isHRAdmin,
   setIsRescueMode,
-  setCurrentView,
   setShowBackend,
   setBackendTab,
+  setCurrentView,
   attendanceLogs,
   safeDepartments,
   applications,
   handlePunch,
-  appFormType,
   setAppFormType,
-  appFormData,
   setAppFormData,
+  appFormType,
+  appFormData,
   handleSubmitApplication,
   LEAVE_TYPES
 }) {
+  const [showCalendar, setShowCalendar] = useState(false);
+
   if (!currentEmp) return (
     <div className="flex flex-col items-center justify-center h-full p-8 text-center">
       <div className="w-20 h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-4">
@@ -76,6 +79,18 @@ export default function Dashboard({
           <h2 className="text-2xl font-black text-gray-700 mb-2">考勤紀錄由外部系統管理</h2>
           <p className="text-gray-500 max-w-md">您的考勤資料目前透過 Apollo EX 或其他實體設備進行管理，無需於本內網執行打卡操作。</p>
         </div>
+      ) : showCalendar ? (
+        <div className="flex flex-col flex-1 min-h-[500px] mb-6 animate-fade-in relative z-10 transition-all">
+          <button onClick={() => setShowCalendar(false)} className="self-start mb-4 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm rounded-lg transition shadow-sm flex items-center gap-2">
+            回總覽儀表板
+          </button>
+          <AttendanceCalendar 
+            employee={currentEmp} 
+            attendanceLogs={attendanceLogs} 
+            applications={applications} 
+            onDirectPunch={(date) => { setAppFormType('punch'); setAppFormData({ punchType: 'in', date }); setShowCalendar(false); }} 
+          />
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="flex flex-col gap-6">
@@ -85,15 +100,26 @@ export default function Dashboard({
               
               <div className="flex flex-col items-center justify-center w-full py-4">
                 {activeLeave ? (
-                  <div className="flex flex-col items-center justify-center p-6 text-center bg-blue-50 border border-blue-200 rounded-xl w-full">
-                    <CalendarDays size={40} className="text-blue-400 mb-2" />
-                    <h3 className="font-bold text-blue-800 text-lg">您目前處於請假期間</h3>
-                    <div className="text-sm text-blue-600 mt-2 bg-white px-3 py-1.5 rounded shadow-sm text-left">
-                      <div>假別：<span className="font-bold">{activeLeave.leaveType}</span></div>
-                      <div>時間：{activeLeave.startDate} {activeLeave.startHour}:00</div>
-                      <div>至 {activeLeave.endDate} {activeLeave.endHour}:00</div>
+                  <div className="flex flex-col gap-4 w-full">
+                    <div className="flex flex-col items-center justify-center p-6 text-center bg-blue-50 border border-blue-200 rounded-xl w-full">
+                      <CalendarDays size={40} className="text-blue-400 mb-2" />
+                      <h3 className="font-bold text-blue-800 text-lg">您目前處於請假期間</h3>
+                      <div className="text-sm text-blue-600 mt-2 bg-white px-3 py-1.5 rounded shadow-sm text-left">
+                        <div>假別：<span className="font-bold">{activeLeave.leaveType}</span></div>
+                        <div>時間：{activeLeave.startDate} {activeLeave.startHour}:00</div>
+                        <div>至 {activeLeave.endDate} {activeLeave.endHour}:00</div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-4">👉 暫停打卡。</p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-4">👉 暫停打卡。</p>
+                    {!todayRecords.in && (
+                      <div className="bg-red-50 border-2 border-red-500 rounded-xl p-4 flex gap-3 text-red-800 animate-[pulse_2s_infinite] shadow-md">
+                        <AlertCircle className="shrink-0 mt-0.5 text-red-600" size={24} />
+                        <div className="flex flex-col gap-1 text-sm">
+                          <h4 className="font-black text-red-600">⚠️ 您今日尚未有【上班打卡】紀錄</h4>
+                          <p className="font-bold text-red-800/80 leading-relaxed">若早段時間為正常出勤 (例：下午請假，但早上有上班)，請務必至右側填寫「補打卡單」，以免系統計算錯誤曠職！</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : !todayRecords.in ? (
                   <button onClick={() => handlePunch('in')} className="w-48 h-48 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-3xl shadow-xl hover:scale-105 transition-all flex flex-col items-center justify-center gap-2"><Clock size={40}/> 上班打卡</button>
@@ -124,8 +150,11 @@ export default function Dashboard({
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
-              <h2 className="text-lg font-bold text-gray-600 mb-4 flex items-center gap-2"><CalendarDays className="text-[#C09D9B]" /> 近期考勤紀錄 (過去 7 天)</h2>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col relative">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold text-gray-600 flex items-center gap-2"><CalendarDays className="text-[#C09D9B]" /> 近期考勤紀錄 (過去 7 天)</h2>
+                <button onClick={() => setShowCalendar(true)} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 transition flex items-center gap-1"><CalendarRange size={14}/> 完整日曆</button>
+              </div>
               <div className="flex flex-col gap-2">
                 {past7Days.map(d => {
                   const r = attendanceLogs[currentEmp.id]?.[d] || {};

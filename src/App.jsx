@@ -272,15 +272,15 @@ function MainApp() {
 
         <div className="flex-1 py-6 flex flex-col gap-2 overflow-y-auto px-3">
           {user && (
-            <button onClick={() => setCurrentView('dashboard')} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition font-bold group ${currentView==='dashboard'?'bg-[#C09D9B] text-white shadow-md':'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
+            <button onClick={() => { setCurrentView('dashboard'); setShowBackend(false); }} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition font-bold group ${currentView==='dashboard'?'bg-[#C09D9B] text-white shadow-md':'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
               <Home size={20} className={currentView==='dashboard'?'':'group-hover:text-[#C09D9B]'} />{isSidebarOpen && <span className="truncate">個人首頁 Dashboard</span>}
             </button>
           )}
-          <button onClick={() => setCurrentView('orgChart')} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition font-bold group ${currentView==='orgChart'?'bg-[#C09D9B] text-white shadow-md':'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
+          <button onClick={() => { setCurrentView('orgChart'); setShowBackend(false); }} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition font-bold group ${currentView==='orgChart'?'bg-[#C09D9B] text-white shadow-md':'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
             <Network size={20} className={currentView==='orgChart'?'':'group-hover:text-[#C09D9B]'} />{isSidebarOpen && <span className="truncate">組織架構圖 Org Chart</span>}
           </button>
           {user && isHRAdmin && (
-            <button onClick={() => setCurrentView('warRoom')} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition font-bold group ${currentView==='warRoom'?'bg-[#C09D9B] text-white shadow-md':'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
+            <button onClick={() => { setCurrentView('warRoom'); setShowBackend(false); }} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition font-bold group ${currentView==='warRoom'?'bg-[#C09D9B] text-white shadow-md':'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
               <Users size={20} className={currentView==='warRoom'?'':'group-hover:text-[#C09D9B]'} />{isSidebarOpen && <span className="truncate">考勤與簽核 War Room</span>}
             </button>
           )}

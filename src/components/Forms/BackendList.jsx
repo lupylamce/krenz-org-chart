@@ -45,14 +45,14 @@ export default function BackendList({
   );
 
   return (
-    <div className="absolute inset-0 bg-white z-[60] flex flex-col overflow-hidden animate-fade-in shadow-2xl rounded-l-3xl">
+    <div className="absolute inset-0 bg-white z-[60] flex flex-col animate-fade-in shadow-2xl rounded-l-3xl">
       <div className="p-6 border-b border-gray-200 flex justify-between items-center shrink-0 shadow-sm z-10 bg-white">
         <h2 className="text-2xl font-black text-gray-800">資料庫後臺</h2>
         <button onClick={() => setShowBackend(false)} className="w-10 h-10 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full transition"><X size={24}/></button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 bg-gray-50 flex flex-col gap-6">
-        <div className="flex justify-between items-center">
+      <div className="flex-1 overflow-hidden flex flex-col p-6 bg-gray-50 gap-6">
+        <div className="flex justify-between items-center shrink-0">
           <div className="flex gap-2 p-1 bg-gray-200 rounded-xl w-max">
             <button onClick={() => setBackendTab('person')} className={`px-6 py-2 rounded-lg font-bold text-sm transition ${backendTab === 'person' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>人員花名冊</button>
             <button onClick={() => setBackendTab('dept')} className={`px-6 py-2 rounded-lg font-bold text-sm transition ${backendTab === 'dept' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>部門組織表</button>
@@ -71,10 +71,11 @@ export default function BackendList({
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex-1 flex flex-col">
-          {backendTab === 'person' && (
-            <table className="w-full text-left border-collapse text-sm">
-              <thead className="bg-gray-50 text-gray-600 font-bold sticky top-0 shadow-sm">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 flex-1 flex flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto">
+            {backendTab === 'person' && (
+              <table className="w-full text-left border-collapse text-sm">
+                <thead className="bg-gray-50 text-gray-600 font-bold sticky top-0 shadow-sm z-10">
                 <tr>
                   <th className="p-4 border-b">名稱</th>
                   <th className="p-4 border-b">職稱</th>
@@ -137,6 +138,7 @@ export default function BackendList({
               </tbody>
             </table>
           )}
+          </div>
         </div>
       </div>
     </div>

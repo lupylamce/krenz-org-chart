@@ -6,6 +6,7 @@ import {
 import { getTodayString, getTimeString } from '../../utils/dateHelpers';
 import { calculateAttendanceStats } from '../../utils/attendance';
 import InputField from '../common/InputField';
+import AttendanceCalendar from '../Dashboard/AttendanceCalendar';
 
 export default function WarRoom({
   isHRAdmin,
@@ -21,6 +22,7 @@ export default function WarRoom({
   const [approvalFilter, setApprovalFilter] = useState({ search: '', type: 'all', status: 'pending' });
   const [selectedAppDetail, setSelectedAppDetail] = useState(null);
   const [attSettingItem, setAttSettingItem] = useState(null);
+  const [selectedEmpCalendar, setSelectedEmpCalendar] = useState(null);
 
   const filteredApps = applications.filter(a => {
     if (!isHRAdmin) { 
@@ -96,7 +98,12 @@ export default function WarRoom({
                       <td className="p-4 text-center font-bold text-gray-800">{getTimeString(record.in) || '-'}{stats.lateMins > 0 && !approvedLeave && emp.enablePunch !== false && <div className="mt-1 text-[10px] text-red-600 bg-red-50 border border-red-100 rounded px-1 w-max mx-auto">遲到 {stats.lateMins} 分</div>}</td>
                       <td className="p-4 text-center font-bold text-gray-800">{getTimeString(record.out) || '-'}{stats.earlyMins > 0 && !approvedLeave && emp.enablePunch !== false && <div className="mt-1 text-[10px] text-orange-600 bg-orange-50 border border-orange-100 rounded px-1 w-max mx-auto">早退 {stats.earlyMins} 分</div>}</td>
                       <td className="p-4 text-center"><span className={`px-3 py-1 rounded-full text-[10px] ${finalColor}`}>{finalStatus}</span></td>
-                      <td className="p-4 text-center"><button onClick={() => setAttSettingItem(emp)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"><Settings size={18} /></button></td>
+                      <td className="p-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button onClick={() => setSelectedEmpCalendar(emp)} className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition" title="觀看考勤月曆"><CalendarDays size={18} /></button>
+                          <button onClick={() => setAttSettingItem(emp)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="考勤設定"><Settings size={18} /></button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -235,6 +242,27 @@ export default function WarRoom({
                 <button type="submit" className="px-5 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-bold shadow-md transition">儲存設定</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {selectedEmpCalendar && (
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-[100] flex flex-col p-6 animate-fade-in shadow-2xl">
+          <div className="flex justify-between items-center mb-6 shrink-0 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <h3 className="font-black text-gray-800 text-xl flex items-center gap-2">
+              <CalendarDays className="text-[#C09D9B]" size={28} /> {selectedEmpCalendar.name} 的考勤月曆
+            </h3>
+            <button onClick={() => setSelectedEmpCalendar(null)} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition shadow-sm flex items-center gap-2">
+              <X size={18} /> 關閉月曆
+            </button>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <AttendanceCalendar 
+              employee={selectedEmpCalendar}
+              attendanceLogs={attendanceLogs}
+              applications={applications}
+              isHRView={true}
+            />
           </div>
         </div>
       )}
